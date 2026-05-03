@@ -1,0 +1,8 @@
+{
+  "name": "devsecops-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "devDependencies": {
+    "eslint": "^10.3.0"
+  }
+}
