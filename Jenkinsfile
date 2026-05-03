@@ -7,12 +7,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/satyayanamadala/devsecops-app.git'
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 bat 'npm install'
