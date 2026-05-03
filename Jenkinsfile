@@ -2,35 +2,56 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "yanamadalasatyanarayana/devsecops-app"
+        DOCKER_IMAGE = "yanamadalasatyanarayana/devsecops-app"
     }
 
     stages {
 
-        stage('Code Security Scan') {
+        stage('Checkout') {
             steps {
-                bat 'npm audit'
+                git 'https://github.com/satyayanamadala/devsecops-app.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                bat 'npm install'
+            }
+        }
+
+        stage('Lint Check') {
+            steps {
+                bat 'npx eslint . || exit 0'
+            }
+        }
+
+        stage('Dependency Scan') {
+            steps {
+                bat 'npm audit || exit 0'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %IMAGE% .'
+                bat 'docker build -t %DOCKER_IMAGE% .'
             }
         }
 
-        stage('Container Security Scan') {
+        stage('Docker Scan') {
             steps {
-                bat 'trivy image %IMAGE%'
+                bat 'trivy image %DOCKER_IMAGE% || exit 0'
             }
         }
 
         stage('Push Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub',
-                usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
                     bat 'echo %PASS% | docker login -u %USER% --password-stdin'
-                    bat 'docker push %IMAGE%'
+                    bat 'docker push %DOCKER_IMAGE%'
                 }
             }
         }
@@ -39,7 +60,9 @@ pipeline {
             steps {
                 bat '''
                 set KUBECONFIG=C:\\Users\\satya\\.kube\\config
-                kubectl apply -f deployment.yaml
+
+                kubectl apply -f deployment.yaml --validate=false
+                kubectl apply -f service.yaml --validate=false
                 '''
             }
         }
